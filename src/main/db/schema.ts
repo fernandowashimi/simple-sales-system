@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS buyers (
 CREATE TABLE IF NOT EXISTS sales (
   id INTEGER PRIMARY KEY, buyer_id INTEGER NULL REFERENCES buyers(id),
   date TEXT NOT NULL, shipped INTEGER NOT NULL DEFAULT 0,
+  paid_cents INTEGER NOT NULL DEFAULT 0 CHECK (paid_cents >= 0),
   created_at TEXT NOT NULL DEFAULT (datetime('now')));
 CREATE TABLE IF NOT EXISTS sale_items (
   id INTEGER PRIMARY KEY,
@@ -26,6 +27,9 @@ export function openDb(path: string): DatabaseSync {
   // set explicitly because WAL mode persists in files created by earlier builds
   db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = DELETE;')
   db.exec(SCHEMA)
+  // databases created before v1.0.2 lack paid_cents; CREATE TABLE IF NOT EXISTS won't add it
+  if (!db.prepare('PRAGMA table_info(sales)').all().some((c) => c.name === 'paid_cents'))
+    db.exec('ALTER TABLE sales ADD COLUMN paid_cents INTEGER NOT NULL DEFAULT 0 CHECK (paid_cents >= 0)')
   return db
 }
 

@@ -1,5 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite'
 import type { Sale, SaleInput, SaleRow } from '../../shared/types'
+import { paymentStatus } from '../../shared/payment'
 import { findOrCreateBuyer } from './products'
 import { tx } from './schema'
 
@@ -26,6 +27,9 @@ function validate(input: SaleInput): void {
     if (!Number.isInteger(it.unitPriceCents) || it.unitPriceCents < 0)
       throw new ValidationError('Preço inválido.')
   }
+  if (!Number.isInteger(input.paidCents) || input.paidCents < 0) throw new ValidationError('Sinal inválido.')
+  const total = input.items.reduce((sum, it) => sum + it.quantity * it.unitPriceCents, 0)
+  if (input.paidCents > total) throw new ValidationError('Sinal maior que o total da venda.')
 }
 
 export function saveSale(db: DatabaseSync, input: SaleInput): number {
@@ -37,14 +41,16 @@ export function saveSale(db: DatabaseSync, input: SaleInput): number {
     let id: number
     if (input.id != null) {
       const r = db
-        .prepare('UPDATE sales SET buyer_id = ?, date = ?, shipped = ? WHERE id = ?')
-        .run(buyerId, input.date, shipped, input.id)
+        .prepare('UPDATE sales SET buyer_id = ?, date = ?, shipped = ?, paid_cents = ? WHERE id = ?')
+        .run(buyerId, input.date, shipped, input.paidCents, input.id)
       if (r.changes === 0) throw new ValidationError('Venda não encontrada.')
       id = input.id
       db.prepare('DELETE FROM sale_items WHERE sale_id = ?').run(id)
     } else {
       id = Number(
-        db.prepare('INSERT INTO sales (buyer_id, date, shipped) VALUES (?, ?, ?)').run(buyerId, input.date, shipped)
+        db
+          .prepare('INSERT INTO sales (buyer_id, date, shipped, paid_cents) VALUES (?, ?, ?, ?)')
+          .run(buyerId, input.date, shipped, input.paidCents)
           .lastInsertRowid
       )
     }
@@ -62,7 +68,7 @@ const strOrNull = (v: unknown): string | null => (v == null ? null : String(v))
 export function getSale(db: DatabaseSync, id: number): Sale | null {
   const s = db
     .prepare(
-      `SELECT s.id, s.buyer_id, b.name AS buyer_name, s.date, s.shipped
+      `SELECT s.id, s.buyer_id, b.name AS buyer_name, s.date, s.shipped, s.paid_cents
        FROM sales s LEFT JOIN buyers b ON b.id = s.buyer_id WHERE s.id = ?`
     )
     .get(id)
@@ -85,6 +91,7 @@ export function getSale(db: DatabaseSync, id: number): Sale | null {
     buyerName: strOrNull(s.buyer_name),
     date: String(s.date),
     shipped: Boolean(s.shipped),
+    paidCents: Number(s.paid_cents),
     items
   }
 }
@@ -97,7 +104,8 @@ export function listSaleRows(db: DatabaseSync): SaleRow[] {
   return db
     .prepare(
       `SELECT s.id AS sale_id, i.id AS item_id, s.date, s.buyer_id, b.name AS buyer_name,
-              i.product_id, p.name AS product_name, i.quantity, i.unit_price_cents, s.shipped
+              i.product_id, p.name AS product_name, i.quantity, i.unit_price_cents, s.shipped, s.paid_cents,
+              SUM(i.quantity * i.unit_price_cents) OVER (PARTITION BY s.id) AS sale_total
        FROM sale_items i JOIN sales s ON s.id = i.sale_id JOIN products p ON p.id = i.product_id
        LEFT JOIN buyers b ON b.id = s.buyer_id
        ORDER BY s.date DESC, s.id DESC, i.id ASC`
@@ -114,6 +122,9 @@ export function listSaleRows(db: DatabaseSync): SaleRow[] {
       quantity: Number(r.quantity),
       unitPriceCents: Number(r.unit_price_cents),
       subtotalCents: Number(r.quantity) * Number(r.unit_price_cents),
-      shipped: Boolean(r.shipped)
+      shipped: Boolean(r.shipped),
+      paidCents: Number(r.paid_cents),
+      saleTotalCents: Number(r.sale_total),
+      payment: paymentStatus(Number(r.paid_cents), Number(r.sale_total))
     }))
 }

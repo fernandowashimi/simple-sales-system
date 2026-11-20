@@ -15,6 +15,9 @@ const row = (over: Partial<SaleRow> = {}): SaleRow => ({
   unitPriceCents: 4500,
   subtotalCents: 9000,
   shipped: true,
+  paidCents: 0,
+  saleTotalCents: 100,
+  payment: 'pending',
   ...over
 })
 

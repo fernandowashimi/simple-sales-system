@@ -1,3 +1,5 @@
+import type { PaymentStatus } from './payment'
+
 export type Product = { id: number; name: string }
 export type Buyer = { id: number; name: string }
 export type SaleItemInput = { productId: number; quantity: number; unitPriceCents: number }
@@ -7,6 +9,7 @@ export type SaleInput = {
   newBuyerName: string | null
   date: string
   shipped: boolean
+  paidCents: number
   items: SaleItemInput[]
 }
 export type Sale = {
@@ -15,6 +18,7 @@ export type Sale = {
   buyerName: string | null
   date: string
   shipped: boolean
+  paidCents: number
   items: (SaleItemInput & { productName: string })[]
 }
 export type SaleRow = {
@@ -29,4 +33,7 @@ export type SaleRow = {
   unitPriceCents: number
   subtotalCents: number
   shipped: boolean
+  paidCents: number
+  saleTotalCents: number
+  payment: PaymentStatus
 }
