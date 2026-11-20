@@ -9,7 +9,12 @@ test.each([
   ['', null],
   ['-3', null],
   ['abc', null],
-  ['1,234', null]
+  ['1,234', null],
+  ['45.50', 4550],
+  ['45.5', 4550],
+  ['1.234', 123400],
+  ['1.234.567,8', 123456780],
+  ['12.3456', null]
 ])('parsePriceBR(%s) = %s', (input, expected) => {
   expect(parsePriceBR(input)).toBe(expected)
 })

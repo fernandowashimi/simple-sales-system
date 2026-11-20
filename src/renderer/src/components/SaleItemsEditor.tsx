@@ -84,7 +84,16 @@ export function SaleItemsEditor({ products, items, onChange }: { products: Produ
               </ComboBox>
             </div>
             <div data-field="qty">
-              <Input aria-label={`Quantidade da linha ${i + 1}`} inputMode="numeric" placeholder="0" value={it.quantity} onChange={(quantity) => update(i, { quantity })} />
+              <Input aria-label={`Quantidade da linha ${i + 1}`} inputMode="numeric" placeholder="0" value={it.quantity}
+                onChange={(quantity) => update(i, { quantity })}
+                onKeyDown={(e) => {
+                  // Enter moves on to the price instead of submitting the whole sale
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    focusField(i, 'price')
+                  }
+                }}
+              />
             </div>
             <div data-field="price">
               <Input

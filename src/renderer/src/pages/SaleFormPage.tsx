@@ -18,12 +18,16 @@ import { SimilarBuyerModal } from '../components/SimilarBuyerModal'
 import { calendarToIso, isoToCalendar } from '../lib/i18n'
 import { toSaleInput, type SaleDraft } from '../lib/saleForm'
 
-const emptyDraft = (): SaleDraft => ({ buyerText: '', buyerId: null, date: todayISO(), shipped: false, items: [] })
+export const emptyDraft = (): SaleDraft => ({ buyerText: '', buyerId: null, date: todayISO(), shipped: false, items: [] })
 
-export function SaleFormPage({ saleId, navigate }: { saleId?: number; navigate: (p: Page) => void }): React.JSX.Element {
+type DraftState = [SaleDraft, React.Dispatch<React.SetStateAction<SaleDraft>>]
+
+export function SaleFormPage({ saleId, navigate, keptDraft }: { saleId?: number; navigate: (p: Page) => void; keptDraft?: DraftState }): React.JSX.Element {
   const [products, setProducts] = useState<Product[]>([])
   const [buyers, setBuyers] = useState<Buyer[]>([])
-  const [draft, setDraft] = useState<SaleDraft>(emptyDraft)
+  // a new sale's draft lives in App so leaving the page (e.g. to add a missing product) keeps it
+  const local = useState<SaleDraft>(emptyDraft)
+  const [draft, setDraft] = keptDraft ?? local
   const [pending, setPending] = useState<{ input: SaleInput; matches: Buyer[] } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [saving, setSaving] = useState(false)

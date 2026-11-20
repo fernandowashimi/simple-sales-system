@@ -51,6 +51,7 @@ app.whenReady().then(() => {
   const db = openDb(dbPath)
   seedProductsIfEmpty(db, parseSeedCsv(readFileSync(seedCsvPath, 'utf8')))
   registerIpc(db, dbPath)
+  app.on('will-quit', () => db.close())
 
   createWindow()
 

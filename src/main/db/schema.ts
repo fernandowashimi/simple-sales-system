@@ -22,7 +22,9 @@ CREATE INDEX IF NOT EXISTS sale_items_sale_id ON sale_items(sale_id);
 
 export function openDb(path: string): DatabaseSync {
   const db = new DatabaseSync(path)
-  db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;')
+  // DELETE journal (not WAL): vendas.db alone is always complete, so copying/replacing it by hand is safe;
+  // set explicitly because WAL mode persists in files created by earlier builds
+  db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = DELETE;')
   db.exec(SCHEMA)
   return db
 }
