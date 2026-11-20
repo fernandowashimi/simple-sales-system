@@ -6,7 +6,7 @@ import { Input } from '@/components/base/input/input'
 import type { Product } from '../../../shared/types'
 import { nameKey } from '../../../shared/names'
 import { formatBRL, formatPriceInput, parsePriceBR } from '../../../shared/money'
-import { withTrailingBlank, type ItemDraft } from '../lib/saleForm'
+import { itemSubtotal, withTrailingBlank, type ItemDraft } from '../lib/saleForm'
 
 const focusField = (row: number, field: 'product' | 'qty' | 'price'): void => {
   requestAnimationFrame(() => document.querySelector<HTMLInputElement>(`[data-row="${row}"] [data-field="${field}"] input`)?.focus())
@@ -19,11 +19,6 @@ export function firstOptionKey(input: HTMLInputElement): string | null {
   return list.querySelector<HTMLElement>('[role=option]')?.dataset.key ?? null
 }
 
-export const itemSubtotal =(it: ItemDraft): number | null => {
-  const cents = parsePriceBR(it.price)
-  const q = /^\d+$/.test(it.quantity.trim()) ? Number(it.quantity) : null
-  return cents != null && q != null ? cents * q : null
-}
 
 const GRID = 'grid grid-cols-[minmax(0,1fr)_96px_140px_120px_36px] items-start gap-3'
 

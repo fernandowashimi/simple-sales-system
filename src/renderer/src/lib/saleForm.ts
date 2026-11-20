@@ -4,12 +4,24 @@ import { parsePriceBR } from '../../../shared/money'
 
 /** `uid` is a stable React key so removing a middle row never shifts another row's inputs. */
 export type ItemDraft = { uid?: number; productId: number | null; quantity: string; price: string }
-export type SaleDraft = { id?: number; buyerText: string; buyerId: number | null; date: string; shipped: boolean; items: ItemDraft[] }
+export type SaleDraft = { id?: number; buyerText: string; buyerId: number | null; date: string; shipped: boolean; paid: string; items: ItemDraft[] }
 
 let nextUid = 1
 export const blankItem = (): ItemDraft => ({ uid: nextUid++, productId: null, quantity: '', price: '' })
 export const withUid = (it: Omit<ItemDraft, 'uid'>): ItemDraft => ({ ...it, uid: nextUid++ })
 export const isBlank = (it: ItemDraft): boolean => it.productId == null && !it.quantity.trim() && !it.price.trim()
+
+export const itemSubtotal = (it: ItemDraft): number | null => {
+  const cents = parsePriceBR(it.price)
+  const q = /^\d+$/.test(it.quantity.trim()) ? Number(it.quantity) : null
+  return cents != null && q != null ? cents * q : null
+}
+
+/** Sum of the rows that parse: the number the form's footer shows. */
+export const draftTotalCents = (items: ItemDraft[]): number => items.reduce((sum, it) => sum + (itemSubtotal(it) ?? 0), 0)
+
+/** The "Marcar como pago" checkbox is derived: checked exactly when the sinal covers a non-zero total. */
+export const isMarkedPaid = (paid: string, totalCents: number): boolean => totalCents > 0 && parsePriceBR(paid) === totalCents
 
 /** Exactly one blank row at the end to type into: extra trailing blanks dropped, the first one kept. */
 export function withTrailingBlank(items: ItemDraft[]): ItemDraft[] {
@@ -39,12 +51,16 @@ export function toSaleInput(draft: SaleDraft, buyers: Buyer[]): { input: SaleInp
     if (cents == null) return { error: `Linha ${line}: preço inválido.` }
     items.push({ productId: it.productId, quantity: Number(q), unitPriceCents: cents })
   }
+  const paidCents = draft.paid.trim() ? parsePriceBR(draft.paid) : 0
+  if (paidCents == null) return { error: 'Sinal inválido.' }
+  if (paidCents > items.reduce((sum, it) => sum + it.quantity * it.unitPriceCents, 0)) return { error: 'Sinal maior que o total da venda.' }
   return {
     input: {
       ...(draft.id != null ? { id: draft.id } : {}),
       ...resolveBuyer(draft.buyerText, draft.buyerId, buyers),
       date: draft.date,
       shipped: draft.shipped,
+      paidCents,
       items
     }
   }

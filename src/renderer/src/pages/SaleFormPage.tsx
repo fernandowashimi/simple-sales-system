@@ -4,22 +4,23 @@ import { Button } from '@/components/base/buttons/button'
 import { Checkbox } from '@/components/base/checkbox/checkbox'
 import { DatePicker } from '@/components/base/date-picker/date-picker'
 import { Label } from '@/components/base/input/label'
+import { Input } from '@/components/base/input/input'
 import { Kbd } from '@/components/base/kbd/kbd'
 import { AlertDialog } from '@/components/base/modal/modal'
 import { toast } from '@/components/base/toast/toast'
 import type { Buyer, Product, SaleInput } from '../../../shared/types'
 import { todayISO } from '../../../shared/dates'
 import { findSimilar } from '../../../shared/names'
-import { formatBRL, formatPriceInput } from '../../../shared/money'
+import { formatBRL, formatPriceInput, parsePriceBR } from '../../../shared/money'
 import type { Page } from '../App'
 import { BuyerField } from '../components/BuyerField'
 import { Card, PageHeader } from '../components/PageHeader'
-import { itemSubtotal, SaleItemsEditor } from '../components/SaleItemsEditor'
+import { SaleItemsEditor } from '../components/SaleItemsEditor'
 import { SimilarBuyerModal } from '../components/SimilarBuyerModal'
 import { calendarToIso, isoToCalendar } from '../lib/i18n'
-import { blankItem, toSaleInput, withTrailingBlank, withUid, type SaleDraft } from '../lib/saleForm'
+import { blankItem, draftTotalCents, isMarkedPaid, toSaleInput, withTrailingBlank, withUid, type SaleDraft } from '../lib/saleForm'
 
-export const emptyDraft = (): SaleDraft => ({ buyerText: '', buyerId: null, date: todayISO(), shipped: false, items: [blankItem()] })
+export const emptyDraft = (): SaleDraft => ({ buyerText: '', buyerId: null, date: todayISO(), shipped: false, paid: '', items: [blankItem()] })
 
 type DraftState = [SaleDraft, React.Dispatch<React.SetStateAction<SaleDraft>>]
 
@@ -46,12 +47,13 @@ export function SaleFormPage({ saleId, navigate, keptDraft }: { saleId?: number;
           buyerId: s.buyerId,
           date: s.date,
           shipped: s.shipped,
+          paid: s.paidCents ? formatPriceInput(s.paidCents) : '',
           items: withTrailingBlank(s.items.map((it) => withUid({ productId: it.productId, quantity: String(it.quantity), price: formatPriceInput(it.unitPriceCents) })))
         })
       })
   }, [saleId, navigate])
 
-  const total = useMemo(() => draft.items.reduce((sum, it) => sum + (itemSubtotal(it) ?? 0), 0), [draft.items])
+  const total = useMemo(() => draftTotalCents(draft.items), [draft.items])
 
   const persist = async (input: SaleInput): Promise<void> => {
     setSaving(true)
@@ -120,7 +122,7 @@ export function SaleFormPage({ saleId, navigate, keptDraft }: { saleId?: number;
           submit()
         }}
       >
-        <Card className="grid grid-cols-[minmax(0,1fr)_200px_auto] items-end gap-4">
+        <Card className="grid grid-cols-[minmax(0,1fr)_200px_auto_140px_auto] items-end gap-4">
           <div data-field="buyer">
             <BuyerField buyers={buyers} text={draft.buyerText} buyerId={draft.buyerId} onChange={(buyerText, buyerId) => setDraft((d) => ({ ...d, buyerText, buyerId }))} />
           </div>
@@ -131,6 +133,23 @@ export function SaleFormPage({ saleId, navigate, keptDraft }: { saleId?: number;
           <div className="flex h-9 items-center">
             <Checkbox isSelected={draft.shipped} onChange={(shipped) => setDraft((d) => ({ ...d, shipped }))}>
               Enviado
+            </Checkbox>
+          </div>
+          <Input
+            label="Sinal"
+            inputMode="decimal"
+            placeholder="0,00"
+            leadingAddon={<span className="text-body-medium text-text-tertiary">R$</span>}
+            value={draft.paid}
+            onChange={(paid) => setDraft((d) => ({ ...d, paid }))}
+            onBlur={() => {
+              const cents = parsePriceBR(draft.paid)
+              if (cents != null) setDraft((d) => ({ ...d, paid: formatPriceInput(cents) }))
+            }}
+          />
+          <div className="flex h-9 items-center">
+            <Checkbox isSelected={isMarkedPaid(draft.paid, total)} onChange={(on) => setDraft((d) => ({ ...d, paid: on ? formatPriceInput(total) : '' }))}>
+              Marcar como pago
             </Checkbox>
           </div>
         </Card>
