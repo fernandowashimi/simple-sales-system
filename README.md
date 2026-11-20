@@ -21,7 +21,12 @@ Sai em `dist/gestao-de-vendas-<versão>-setup.exe`. Instale uma vez à mão no c
 ## Publicar uma atualização
 
 1. Aumente `version` no `package.json` (ex.: `1.0.0` → `1.0.1`). Sem isso o app não vê a versão como nova.
-2. Commit.
+2. Commit, crie a tag e envie (o GitHub recusa a release se a tag não existir):
+
+```powershell
+git commit -am "release: v1.0.1"; git tag v1.0.1; git push --follow-tags
+```
+
 3. Publique (usa o login do `gh`):
 
 ```powershell
