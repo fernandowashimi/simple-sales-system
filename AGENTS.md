@@ -43,3 +43,8 @@ This project uses BoardUI (React + Tailwind CSS v4, source-owned components unde
 
 When unsure about a token, a component's API, or working example code, ask the BoardUI MCP server: `get_theme`, `get_component`, `get_usage_examples`.
 <!-- boardui:rules:end -->
+
+# Releases
+
+- Never edit `version` in `package.json` or create tags by hand. To publish an update, commit everything and run `npm run release` (or `npm run release -- minor|major`): it builds, bumps the version, commits `release: vX.Y.Z`, tags `vX.Y.Z`, pushes and publishes to GitHub Releases, which the installed app auto-updates from.
+- Publishing is outward-facing: only run it when the user asks.

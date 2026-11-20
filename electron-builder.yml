@@ -9,7 +9,7 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json,vitest.config.ts,AGENTS.md}'
-  - '!{components,utils,styles,docs,build,.superpowers,.claude,.cursor}/**'
+  - '!{components,utils,styles,docs,build,scripts,.superpowers,.claude,.cursor}/**'
 asarUnpack:
   - resources/**
 win:

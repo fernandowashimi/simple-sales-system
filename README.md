@@ -20,19 +20,16 @@ Sai em `dist/gestao-de-vendas-<versão>-setup.exe`. Instale uma vez à mão no c
 
 ## Publicar uma atualização
 
-1. Aumente `version` no `package.json` (ex.: `1.0.0` → `1.0.1`). Sem isso o app não vê a versão como nova.
-2. Commit, crie a tag e envie (o GitHub recusa a release se a tag não existir):
+Com tudo commitado, um comando faz o resto:
 
-```powershell
-git commit -am "release: v1.0.1"; git tag v1.0.1; git push --follow-tags
+```bash
+npm run release
 ```
 
-3. Publique (usa o login do `gh`):
+Ele, nesta ordem: verifica o build (typecheck + build), sobe a versão no `package.json` (`1.0.0` → `1.0.1`), cria o commit `release: v1.0.1` e a tag `v1.0.1`, envia para o GitHub e publica a release com o instalador, `latest.yml` e `.blockmap`. Usa o login do `gh` (ou `GH_TOKEN`, se definido).
 
-```powershell
-$env:GH_TOKEN = gh auth token; npm run release
-```
+Para mudanças maiores: `npm run release -- minor` (`1.0.1` → `1.1.0`) ou `npm run release -- major` (`→ 2.0.0`).
 
-Isso cria a release `v<versão>` em github.com/fernandowashimi/simple-sales-system com o instalador, `latest.yml` e `.blockmap`. Na próxima vez que o app abrir, ele baixa a versão em segundo plano e pergunta se quer reiniciar; se não, instala ao fechar.
+Na próxima vez que o app abrir, ele baixa a versão em segundo plano e pergunta se quer reiniciar; se não, instala ao fechar.
 
 Se uma versão mudar a estrutura do banco, ela precisa converter os dados antigos ao abrir.
