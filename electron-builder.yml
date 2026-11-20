@@ -39,3 +39,8 @@ linux:
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
+publish:
+  provider: github
+  owner: fernandowashimi
+  repo: simple-sales-system
+  releaseType: release

@@ -3,6 +3,7 @@ import type { DatabaseSync } from 'node:sqlite'
 import { readFileSync } from 'node:fs'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { autoUpdater } from 'electron-updater'
 import icon from '../../resources/icon.png?asset'
 import seedCsvPath from '../../resources/produtos-seed.csv?asset'
 import { openDb } from './db/schema'
@@ -45,6 +46,25 @@ function createWindow(): void {
   }
 }
 
+// downloads new releases from GitHub in the background; installs on restart or on quit
+function setupAutoUpdate(): void {
+  if (is.dev) return
+  autoUpdater.on('error', () => {}) // offline or no release yet: try again next launch
+  autoUpdater.on('update-downloaded', async (info) => {
+    const { response } = await dialog.showMessageBox({
+      type: 'info',
+      title: 'Atualização disponível',
+      message: `A versão ${info.version} foi baixada.`,
+      detail: 'Reinicie para atualizar agora. Se preferir depois, ela será instalada quando você fechar o app.',
+      buttons: ['Reiniciar agora', 'Depois'],
+      defaultId: 0,
+      cancelId: 1
+    })
+    if (response === 0) autoUpdater.quitAndInstall()
+  })
+  autoUpdater.checkForUpdates().catch(() => {})
+}
+
 // one window on one database: a second launch focuses the first instead
 if (!app.requestSingleInstanceLock()) app.quit()
 app.on('second-instance', () => {
@@ -76,6 +96,7 @@ app.whenReady().then(() => {
   app.on('will-quit', () => db.close())
 
   createWindow()
+  setupAutoUpdate()
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

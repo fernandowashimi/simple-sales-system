@@ -16,7 +16,8 @@
     "build": "npm run typecheck && electron-vite build",
     "postinstall": "install-electron && electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
-    "build:win": "npm run build && electron-builder --win",
+    "build:win": "npm run build && electron-builder --win --publish never",
+    "release": "npm run build && electron-builder --win --publish always",
     "build:mac": "electron-vite build && electron-builder --mac",
     "build:linux": "electron-vite build && electron-builder --linux",
     "test": "vitest run"
@@ -29,6 +30,7 @@
     "@remixicon/react": "^4.9.0",
     "@tailwindcss/postcss": "^4.3.5",
     "@tanstack/react-table": "^8.21.3",
+    "electron-updater": "^6.8.11",
     "exceljs": "^4.4.0",
     "motion": "^12.42.2",
     "react-aria-components": "^1.22.1",
