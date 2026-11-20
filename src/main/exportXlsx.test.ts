@@ -20,7 +20,8 @@ const row = (over: Partial<SaleRow> = {}): SaleRow => ({
 
 async function load(rows: SaleRow[]): Promise<ExcelJS.Worksheet> {
   const wb = new ExcelJS.Workbook()
-  await wb.xlsx.load(await buildSalesWorkbook(rows))
+  const buf = await buildSalesWorkbook(rows)
+  await wb.xlsx.load(buf as unknown as ExcelJS.Buffer)
   return wb.getWorksheet('Vendas')!
 }
 
