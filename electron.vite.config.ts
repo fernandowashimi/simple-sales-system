@@ -7,8 +7,6 @@ export default defineConfig({
   main: {},
   preload: {},
   renderer: {
-    // BoardUI assets live in /public at the project root
-    publicDir: resolve('public'),
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src'),
