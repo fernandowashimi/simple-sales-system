@@ -298,7 +298,7 @@ export function SalesPage({ navigate, viewState }: { navigate: (p: Page) => void
 
 function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }): React.JSX.Element {
   return (
-    <Chip color="blue" variant="subtle" className="gap-1">
+    <Chip color="neutral" variant="subtle" className="gap-1">
       {label}
       <button type="button" onClick={onRemove} aria-label={`Remover filtro ${label}`} className="cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring">
         <RiCloseLine className="size-3.5" aria-hidden />

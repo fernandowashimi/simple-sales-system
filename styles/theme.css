@@ -22,27 +22,40 @@
   --color-neutral-925: #121212;
   --color-blue-400:    #3392ff;
 
+  /* Brand green (Fructus Viveiro), anchored on the app icon's #1F6B43. */
+  --color-forest-50:   #eef7f1;
+  --color-forest-100:  #d8eedf;
+  --color-forest-200:  #b2ddc0;
+  --color-forest-300:  #82c69a;
+  --color-forest-400:  #4eab72;
+  --color-forest-500:  #2a8a52;
+  --color-forest-600:  #1f7244;
+  --color-forest-700:  #1a5c39;
+  --color-forest-800:  #174a30;
+  --color-forest-900:  #133d28;
+  --color-forest-950:  #0a2216;
+
   /* ----- Accent ramp ---------------------------------------------------------
    * The CTA hue. Interactive/selection surfaces (primary button gradient,
    * ghost + link buttons, checkbox, radio, switch, slider, tabs, sidebar
    * selected, focus ring, date-range selection) reference accent-* instead of
    * a raw hue, so the whole system re-tints by overriding these eleven
    * variables at runtime (see components/application/theme/accent.ts) or in
-   * a customer project after importing this file. Defaults to the blue
-   * primitives above. Content/data blues (charts, status chips, calendar
+   * a customer project after importing this file. Points at the brand
+   * forest-* primitives above. Content/data blues (charts, status chips, calendar
    * events, info notifications) deliberately keep referencing blue-*.
    * --------------------------------------------------------------------------*/
-  --color-accent-50:  var(--color-blue-50);
-  --color-accent-100: var(--color-blue-100);
-  --color-accent-200: var(--color-blue-200);
-  --color-accent-300: var(--color-blue-300);
-  --color-accent-400: var(--color-blue-400);
-  --color-accent-500: var(--color-blue-500);
-  --color-accent-600: var(--color-blue-600);
-  --color-accent-700: var(--color-blue-700);
-  --color-accent-800: var(--color-blue-800);
-  --color-accent-900: var(--color-blue-900);
-  --color-accent-950: var(--color-blue-950);
+  --color-accent-50:  var(--color-forest-50);
+  --color-accent-100: var(--color-forest-100);
+  --color-accent-200: var(--color-forest-200);
+  --color-accent-300: var(--color-forest-300);
+  --color-accent-400: var(--color-forest-400);
+  --color-accent-500: var(--color-forest-500);
+  --color-accent-600: var(--color-forest-600);
+  --color-accent-700: var(--color-forest-700);
+  --color-accent-800: var(--color-forest-800);
+  --color-accent-900: var(--color-forest-900);
+  --color-accent-950: var(--color-forest-950);
 
   /* ----- Typography ----------------------------------------------------------
    * Font sizes, weights, line-heights, and tracking all match Tailwind v4

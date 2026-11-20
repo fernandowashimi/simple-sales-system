@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { RiDeleteBinLine, RiSaveLine } from '@remixicon/react'
+import { RiArrowLeftLine, RiDeleteBinLine, RiSaveLine } from '@remixicon/react'
 import { Button } from '@/components/base/buttons/button'
 import { Checkbox } from '@/components/base/checkbox/checkbox'
 import { DatePicker } from '@/components/base/date-picker/date-picker'
 import { Label } from '@/components/base/input/label'
+import { Kbd } from '@/components/base/kbd/kbd'
 import { AlertDialog } from '@/components/base/modal/modal'
 import { toast } from '@/components/base/toast/toast'
 import type { Buyer, Product, SaleInput } from '../../../shared/types'
@@ -107,6 +108,13 @@ export function SaleFormPage({ saleId, navigate, keptDraft }: { saleId?: number;
       />
       <form
         className="flex flex-col gap-3"
+        onKeyDownCapture={(e) => {
+          // Ctrl+Enter saves from any field; plain Enter keeps moving through the item rows
+          if (e.key !== 'Enter' || !(e.ctrlKey || e.metaKey)) return
+          e.preventDefault()
+          e.stopPropagation()
+          if (!saving) submit()
+        }}
         onSubmit={(e) => {
           e.preventDefault()
           submit()
@@ -129,14 +137,26 @@ export function SaleFormPage({ saleId, navigate, keptDraft }: { saleId?: number;
         <Card>
           <SaleItemsEditor products={products} items={draft.items} onChange={(items) => setDraft((d) => ({ ...d, items }))} />
         </Card>
-        <div className="flex items-center justify-end gap-5 px-1">
-          <div className="flex items-baseline gap-2">
-            <span className="text-body-medium text-text-secondary">Total</span>
-            <span className="text-title-3-semibold tabular-nums text-text-primary">{formatBRL(total)}</span>
+        {/* sticky so Total and Save stay in reach on long item lists */}
+        <div className="sticky bottom-0 z-10 flex items-center justify-between gap-5 rounded-3xl border border-border-button-default bg-background-primary-default px-5 py-3 shadow-lg">
+          {isEdit ? (
+            <Button variant="ghost" leadingIcon={RiArrowLeftLine} onClick={() => navigate({ name: 'sales' })}>
+              Voltar sem salvar
+            </Button>
+          ) : (
+            <span className="flex items-center gap-1.5 text-caption-1-regular text-text-tertiary">
+              <Kbd>Ctrl</Kbd>+<Kbd>Enter</Kbd> salva a venda
+            </span>
+          )}
+          <div className="flex items-center gap-5">
+            <div className="flex items-baseline gap-2">
+              <span className="text-body-medium text-text-secondary">Total</span>
+              <span className="text-title-3-semibold tabular-nums text-text-primary">{formatBRL(total)}</span>
+            </div>
+            <Button type="submit" leadingIcon={RiSaveLine} disabled={saving}>
+              {isEdit ? 'Salvar alterações' : 'Salvar venda'}
+            </Button>
           </div>
-          <Button type="submit" leadingIcon={RiSaveLine} disabled={saving}>
-            {isEdit ? 'Salvar alterações' : 'Salvar venda'}
-          </Button>
         </div>
       </form>
 

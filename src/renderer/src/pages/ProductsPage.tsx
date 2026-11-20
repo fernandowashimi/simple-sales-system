@@ -86,7 +86,7 @@ export function ProductsPage(): React.JSX.Element {
     <div className="mx-auto flex max-w-4xl flex-col">
       <PageHeader
         title="Produtos"
-        description={`${products.length} produtos no catálogo`}
+        description={`${products.length} ${products.length === 1 ? 'produto' : 'produtos'} no catálogo`}
         actions={
           <Button leadingIcon={RiAddLine} onClick={() => setEditing({ id: 'new', value: '' })}>
             Novo produto

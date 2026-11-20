@@ -71,7 +71,7 @@ export function AppSidebar({ page, navigate }: { page: Page; navigate: (p: Page)
         <Button variant="secondary" size="small" leadingIcon={RiDatabase2Line} onClick={backup}>
           Fazer backup
         </Button>
-        <p className="break-all px-1 text-caption-1-regular text-text-tertiary" title={dbPath}>
+        <p className="truncate px-1 text-caption-1-regular text-text-tertiary" dir="ltr" title={dbPath}>
           {dbPath}
         </p>
       </div>
