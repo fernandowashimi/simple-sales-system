@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs'
 import type { SaleRow } from '../shared/types'
+import { PAYMENT_LABEL } from '../shared/payment'
 
 const BRL_FMT = '"R$" #,##0.00'
 
@@ -13,7 +14,10 @@ export async function buildSalesWorkbook(rows: SaleRow[]): Promise<Buffer> {
     { header: 'Qtd', width: 8 },
     { header: 'Preço unit.', width: 14, style: { numFmt: BRL_FMT } },
     { header: 'Subtotal', width: 14, style: { numFmt: BRL_FMT } },
-    { header: 'Enviado', width: 10 }
+    { header: 'Enviado', width: 10 },
+    // per-sale values repeated on each item row
+    { header: 'Pago', width: 14, style: { numFmt: BRL_FMT } },
+    { header: 'Situação', width: 12 }
   ]
   ws.getRow(1).font = { bold: true }
   for (const r of rows) {
@@ -26,7 +30,9 @@ export async function buildSalesWorkbook(rows: SaleRow[]): Promise<Buffer> {
       r.quantity,
       r.unitPriceCents / 100,
       r.subtotalCents / 100,
-      r.shipped ? 'Sim' : 'Não'
+      r.shipped ? 'Sim' : 'Não',
+      r.paidCents / 100,
+      PAYMENT_LABEL[r.payment]
     ])
   }
   return Buffer.from(await wb.xlsx.writeBuffer())

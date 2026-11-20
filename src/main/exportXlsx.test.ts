@@ -30,7 +30,7 @@ async function load(rows: SaleRow[]): Promise<ExcelJS.Worksheet> {
 
 test('header, typed cells, null buyer', async () => {
   const ws = await load([row(), row({ itemId: 2, buyerName: null, shipped: false })])
-  expect((ws.getRow(1).values as unknown[]).slice(1)).toEqual(['Data', 'Comprador', 'Produto', 'Qtd', 'Preço unit.', 'Subtotal', 'Enviado'])
+  expect((ws.getRow(1).values as unknown[]).slice(1)).toEqual(['Data', 'Comprador', 'Produto', 'Qtd', 'Preço unit.', 'Subtotal', 'Enviado', 'Pago', 'Situação'])
   const d = ws.getCell(2, 1).value as Date
   expect(d).toBeInstanceOf(Date)
   expect([d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()]).toEqual([2026, 10, 19])
@@ -45,4 +45,12 @@ test('header, typed cells, null buyer', async () => {
 test('zero rows still produce header', async () => {
   const ws = await load([])
   expect(ws.rowCount).toBe(1)
+})
+
+test('sinal columns repeat the sale-level value on each item row', async () => {
+  const ws = await load([row({ paidCents: 3000, payment: 'deposit' }), row({ itemId: 2, paidCents: 3000, payment: 'deposit' })])
+  expect(ws.getCell(2, 8).value).toBe(30)
+  expect(ws.getCell(2, 8).numFmt).toContain('R$')
+  expect(ws.getCell(2, 9).value).toBe('Sinal')
+  expect(ws.getCell(3, 8).value).toBe(30)
 })
