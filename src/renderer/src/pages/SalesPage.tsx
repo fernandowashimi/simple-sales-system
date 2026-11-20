@@ -26,6 +26,7 @@ import type { SaleRow } from '../../../shared/types'
 import { formatDateBR } from '../../../shared/dates'
 import { formatBRL } from '../../../shared/money'
 import { nameKey } from '../../../shared/names'
+import { PAYMENT_LABEL, type PaymentStatus } from '../../../shared/payment'
 import type { Page } from '../App'
 import { Card, PageHeader } from '../components/PageHeader'
 import { emptyFilters, filterRows, type SalesFilters } from '../lib/filters'
@@ -39,8 +40,10 @@ const columns = [
   col.accessor('quantity', { header: 'Qtd', aggregationFn: 'sum', enableSorting: false }),
   col.accessor('unitPriceCents', { header: 'Preço unit.', cell: (c) => formatBRL(c.getValue()), enableSorting: false, aggregationFn: () => null }),
   col.accessor('subtotalCents', { header: 'Subtotal', cell: (c) => formatBRL(c.getValue()), aggregationFn: 'sum', enableSorting: false }),
-  col.accessor('shipped', { header: 'Enviado', enableSorting: false, aggregationFn: () => null })
+  col.accessor('shipped', { header: 'Enviado', enableSorting: false, aggregationFn: () => null }),
+  col.accessor('payment', { header: 'Pagamento', enableSorting: false, aggregationFn: () => null })
 ]
+const PAYMENT_COLOR: Record<PaymentStatus, 'lime' | 'yellow' | 'neutral'> = { paid: 'lime', deposit: 'yellow', pending: 'neutral' }
 const plural = (n: number): string => `${n} ${n === 1 ? 'item' : 'itens'}`
 const NUMERIC = new Set(['quantity', 'unitPriceCents', 'subtotalCents'])
 
@@ -188,6 +191,14 @@ export function SalesPage({ navigate, viewState }: { navigate: (p: Page) => void
             <SelectItem id="yes" textValue="Sim">Sim</SelectItem>
             <SelectItem id="no" textValue="Não">Não</SelectItem>
           </Select>
+          <Select aria-label="Pagamento" size="sm" selectedKey={filters.payment} onSelectionChange={(k) => set({ payment: k as SalesFilters['payment'] })} renderValue={({ selectedText }) => `Pagamento: ${selectedText}`}>
+            <SelectItem id="all" textValue="Todos">Todos</SelectItem>
+            {(['pending', 'deposit', 'paid'] as const).map((s) => (
+              <SelectItem key={s} id={s} textValue={PAYMENT_LABEL[s]}>
+                {PAYMENT_LABEL[s]}
+              </SelectItem>
+            ))}
+          </Select>
           <IdFilter label="Filtrar produto" options={products} selected={filters.productIds} onChange={(productIds) => set({ productIds })} />
           <IdFilter label="Filtrar comprador" options={buyers} selected={filters.buyerIds} onChange={(buyerIds) => set({ buyerIds })} />
         </div>
@@ -270,6 +281,10 @@ export function SalesPage({ navigate, viewState }: { navigate: (p: Page) => void
                       {cell.column.id === 'shipped' ? (
                         <Chip color={row.original.shipped ? 'lime' : 'neutral'} variant="subtle">
                           {row.original.shipped ? 'Sim' : 'Não'}
+                        </Chip>
+                      ) : cell.column.id === 'payment' ? (
+                        <Chip color={PAYMENT_COLOR[row.original.payment]} variant="subtle">
+                          {PAYMENT_LABEL[row.original.payment]}
                         </Chip>
                       ) : (
                         String(cell.column.columnDef.cell && typeof cell.column.columnDef.cell === 'function' ? cell.column.columnDef.cell(cell.getContext()) : cell.getValue())

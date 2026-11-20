@@ -50,3 +50,9 @@ test('AND between fields, OR within a list', () => {
   expect(filterRows(rows, { ...emptyFilters, productIds: [1, 2] }).map((x) => x.itemId)).toEqual([1, 2])
   expect(filterRows(rows, { ...emptyFilters, productIds: [1, 2], buyerIds: [2] }).map((x) => x.itemId)).toEqual([2])
 })
+
+test('payment filter', () => {
+  const rs = [r({ itemId: 1, payment: 'pending' }), r({ itemId: 2, payment: 'deposit' }), r({ itemId: 3, payment: 'paid' })]
+  expect(filterRows(rs, { ...emptyFilters, payment: 'deposit' }).map((x) => x.itemId)).toEqual([2])
+  expect(filterRows(rs, emptyFilters)).toHaveLength(3)
+})
