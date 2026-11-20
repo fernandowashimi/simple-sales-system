@@ -42,7 +42,8 @@ test.each([
   ['qty 0', { items: [{ productId: 1, quantity: 0, unitPriceCents: 1 }] }],
   ['qty fraction', { items: [{ productId: 1, quantity: 1.5, unitPriceCents: 1 }] }],
   ['negative price', { items: [{ productId: 1, quantity: 1, unitPriceCents: -1 }] }],
-  ['bad date', { date: '19/11/2026' }]
+  ['bad date', { date: '19/11/2026' }],
+  ['impossible date', { date: '2026-02-31' }]
 ])('rejects %s and writes nothing', (_, over) => {
   expect(() => saveSale(db, base({ newBuyerName: 'Ana', ...over }))).toThrow(ValidationError)
   expect(listSaleRows(db)).toEqual([])

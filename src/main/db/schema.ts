@@ -37,7 +37,11 @@ export function tx<T>(db: DatabaseSync, fn: () => T): T {
     db.exec('COMMIT')
     return result
   } catch (e) {
-    db.exec('ROLLBACK')
+    try {
+      db.exec('ROLLBACK')
+    } catch {
+      // SQLite may already have rolled back; keep the original error
+    }
     throw e
   }
 }

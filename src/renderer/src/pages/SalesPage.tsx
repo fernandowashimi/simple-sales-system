@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react'
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -76,12 +76,23 @@ function IdFilter({ label, options, selected, onChange }: { label: string; optio
   )
 }
 
-export function SalesPage({ navigate }: { navigate: (p: Page) => void }): React.JSX.Element {
+export type SalesView = { filters: SalesFilters; group: GroupKey; sorting: SortingState; expanded: ExpandedState }
+export const defaultSalesView: SalesView = { filters: emptyFilters, group: 'none', sorting: [{ id: 'date', desc: true }], expanded: true }
+
+/** Setter for one field of the view, accepting a value or an updater like useState/TanStack do. */
+function fieldSetter<K extends keyof SalesView>(setView: Dispatch<SetStateAction<SalesView>>, key: K) {
+  return (u: SalesView[K] | ((old: SalesView[K]) => SalesView[K])): void =>
+    setView((v) => ({ ...v, [key]: typeof u === 'function' ? (u as (old: SalesView[K]) => SalesView[K])(v[key]) : u }))
+}
+
+export function SalesPage({ navigate, viewState }: { navigate: (p: Page) => void; viewState: [SalesView, Dispatch<SetStateAction<SalesView>>] }): React.JSX.Element {
   const [rows, setRows] = useState<SaleRow[]>([])
-  const [filters, setFilters] = useState<SalesFilters>(emptyFilters)
-  const [group, setGroup] = useState<GroupKey>('none')
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'date', desc: true }])
-  const [expanded, setExpanded] = useState<ExpandedState>(true)
+  // view state lives in App so filters/grouping survive opening a sale to edit it
+  const [{ filters, group, sorting, expanded }, setView] = viewState
+  const setFilters = fieldSetter(setView, 'filters')
+  const setGroup = fieldSetter(setView, 'group')
+  const setSorting = fieldSetter(setView, 'sorting')
+  const setExpanded = fieldSetter(setView, 'expanded')
   const [exportOpen, setExportOpen] = useState(false)
 
   useEffect(() => {
@@ -105,6 +116,8 @@ export function SalesPage({ navigate }: { navigate: (p: Page) => void }): React.
     getExpandedRowModel: getExpandedRowModel(),
     autoResetExpanded: false
   })
+  // same rows and sort without grouping: what "Com filtros atuais" exports
+  const flatTable = useReactTable({ data: filtered, columns, state: { sorting }, getCoreRowModel: getCoreRowModel(), getSortedRowModel: getSortedRowModel() })
 
   const set = (patch: Partial<SalesFilters>): void => setFilters((f) => ({ ...f, ...patch }))
   const hasFilters = JSON.stringify(filters) !== JSON.stringify(emptyFilters)
@@ -112,7 +125,7 @@ export function SalesPage({ navigate }: { navigate: (p: Page) => void }): React.
 
   const exportRows = async (which: 'all' | 'filtered'): Promise<void> => {
     setExportOpen(false)
-    const data = which === 'all' ? rows : table.getSortedRowModel().flatRows.filter((r) => !r.getIsGrouped()).map((r) => r.original)
+    const data = which === 'all' ? rows : flatTable.getRowModel().rows.map((r) => r.original)
     try {
       if (await window.api.sales.exportXlsx(data)) toast.success('Planilha exportada', { description: plural(data.length) })
     } catch (e) {

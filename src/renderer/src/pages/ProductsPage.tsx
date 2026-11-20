@@ -73,7 +73,7 @@ export function ProductsPage(): React.JSX.Element {
         onKeyDown={(e) => {
           // keep React Aria's grid navigation from eating keystrokes
           e.stopPropagation()
-          if (e.key === 'Enter') save()
+          if (e.key === 'Enter' && !e.repeat) save()
           if (e.key === 'Escape') setEditing(null)
         }}
       />

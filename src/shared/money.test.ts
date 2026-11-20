@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { formatBRL, parsePriceBR } from './money'
+import { formatBRL, formatPriceInput, parsePriceBR } from './money'
 
 test.each([
   ['R$ 1.234,56', 123456],
@@ -19,3 +19,8 @@ test.each([
   expect(parsePriceBR(input)).toBe(expected)
 })
 test('formatBRL', () => expect(formatBRL(123456).replace(/\s/g, ' ')).toBe('R$ 1.234,56'))
+test('formatPriceInput', () => {
+  expect(formatPriceInput(4550)).toBe('45,50')
+  expect(formatPriceInput(123456)).toBe('1.234,56')
+  expect(formatPriceInput(0)).toBe('0,00')
+})

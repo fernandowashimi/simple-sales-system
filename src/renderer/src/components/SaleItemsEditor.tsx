@@ -5,8 +5,8 @@ import { ComboBox, ComboBoxItem } from '@/components/base/combobox/combobox'
 import { Input } from '@/components/base/input/input'
 import type { Product } from '../../../shared/types'
 import { nameKey } from '../../../shared/names'
-import { formatBRL, parsePriceBR } from '../../../shared/money'
-import { blankItem, isBlank, type ItemDraft } from '../lib/saleForm'
+import { formatBRL, formatPriceInput, parsePriceBR } from '../../../shared/money'
+import { withTrailingBlank, type ItemDraft } from '../lib/saleForm'
 
 const focusField = (row: number, field: 'product' | 'qty' | 'price'): void => {
   requestAnimationFrame(() => document.querySelector<HTMLInputElement>(`[data-row="${row}"] [data-field="${field}"] input`)?.focus())
@@ -28,14 +28,13 @@ export const itemSubtotal =(it: ItemDraft): number | null => {
 const GRID = 'grid grid-cols-[minmax(0,1fr)_96px_140px_120px_36px] items-start gap-3'
 
 export function SaleItemsEditor({ products, items, onChange }: { products: Product[]; items: ItemDraft[]; onChange: (items: ItemDraft[]) => void }): React.JSX.Element {
-  // there is always exactly one blank row at the end to type into
-  const rows = items.length === 0 || !isBlank(items[items.length - 1]) ? [...items, blankItem()] : items
+  const rows = withTrailingBlank(items)
 
   const update = (i: number, patch: Partial<ItemDraft>): void => {
     const next = rows.map((it, j) => (j === i ? { ...it, ...patch } : it))
-    onChange(next)
+    onChange(withTrailingBlank(next))
   }
-  const remove = (i: number): void => onChange(rows.filter((_, j) => j !== i))
+  const remove = (i: number): void => onChange(withTrailingBlank(rows.filter((_, j) => j !== i)))
 
   return (
     <div className="flex flex-col gap-2">
@@ -50,7 +49,7 @@ export function SaleItemsEditor({ products, items, onChange }: { products: Produ
         const sub = itemSubtotal(it)
         const last = i === rows.length - 1
         return (
-          <div key={i} data-row={i} className={GRID}>
+          <div key={it.uid ?? i} data-row={i} className={GRID}>
             <div
               data-field="product"
               onKeyDownCapture={(e) => {
@@ -103,6 +102,10 @@ export function SaleItemsEditor({ products, items, onChange }: { products: Produ
                 leadingAddon={<span className="text-body-medium text-text-tertiary">R$</span>}
                 value={it.price}
                 onChange={(price) => update(i, { price })}
+                onBlur={() => {
+                  const cents = parsePriceBR(it.price)
+                  if (cents != null) update(i, { price: formatPriceInput(cents) })
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault()

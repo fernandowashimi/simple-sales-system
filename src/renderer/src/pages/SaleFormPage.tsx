@@ -9,16 +9,16 @@ import { toast } from '@/components/base/toast/toast'
 import type { Buyer, Product, SaleInput } from '../../../shared/types'
 import { todayISO } from '../../../shared/dates'
 import { findSimilar } from '../../../shared/names'
-import { formatBRL } from '../../../shared/money'
+import { formatBRL, formatPriceInput } from '../../../shared/money'
 import type { Page } from '../App'
 import { BuyerField } from '../components/BuyerField'
 import { Card, PageHeader } from '../components/PageHeader'
 import { itemSubtotal, SaleItemsEditor } from '../components/SaleItemsEditor'
 import { SimilarBuyerModal } from '../components/SimilarBuyerModal'
 import { calendarToIso, isoToCalendar } from '../lib/i18n'
-import { toSaleInput, type SaleDraft } from '../lib/saleForm'
+import { blankItem, toSaleInput, withTrailingBlank, withUid, type SaleDraft } from '../lib/saleForm'
 
-export const emptyDraft = (): SaleDraft => ({ buyerText: '', buyerId: null, date: todayISO(), shipped: false, items: [] })
+export const emptyDraft = (): SaleDraft => ({ buyerText: '', buyerId: null, date: todayISO(), shipped: false, items: [blankItem()] })
 
 type DraftState = [SaleDraft, React.Dispatch<React.SetStateAction<SaleDraft>>]
 
@@ -45,7 +45,7 @@ export function SaleFormPage({ saleId, navigate, keptDraft }: { saleId?: number;
           buyerId: s.buyerId,
           date: s.date,
           shipped: s.shipped,
-          items: s.items.map((it) => ({ productId: it.productId, quantity: String(it.quantity), price: (it.unitPriceCents / 100).toFixed(2).replace('.', ',') }))
+          items: withTrailingBlank(s.items.map((it) => withUid({ productId: it.productId, quantity: String(it.quantity), price: formatPriceInput(it.unitPriceCents) })))
         })
       })
   }, [saleId, navigate])
@@ -82,9 +82,14 @@ export function SaleFormPage({ saleId, navigate, keptDraft }: { saleId?: number;
 
   const remove = async (): Promise<void> => {
     if (saleId == null) return
-    await window.api.sales.remove(saleId)
-    toast.success('Venda excluída')
-    navigate({ name: 'sales' })
+    try {
+      await window.api.sales.remove(saleId)
+      toast.success('Venda excluída')
+      navigate({ name: 'sales' })
+    } catch (e) {
+      toast.error('Não foi possível excluir', { description: (e as Error).message })
+      throw e
+    }
   }
 
   return (

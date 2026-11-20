@@ -10,9 +10,15 @@ export class ValidationError extends Error {
   }
 }
 
+function isRealDate(iso: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false
+  const [y, m, d] = iso.split('-').map(Number)
+  const dt = new Date(Date.UTC(y, m - 1, d))
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d
+}
+
 function validate(input: SaleInput): void {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date) || Number.isNaN(Date.parse(input.date)))
-    throw new ValidationError('Data inválida.')
+  if (!isRealDate(input.date)) throw new ValidationError('Data inválida.')
   if (input.items.length === 0) throw new ValidationError('Adicione pelo menos um produto.')
   for (const it of input.items) {
     if (!Number.isInteger(it.quantity) || it.quantity <= 0)

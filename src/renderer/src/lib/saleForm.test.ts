@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { resolveBuyer, toSaleInput, type SaleDraft } from './saleForm'
+import { isBlank, resolveBuyer, toSaleInput, withTrailingBlank, type SaleDraft } from './saleForm'
 
 const buyers = [{ id: 1, name: 'João Silva' }]
 const base: SaleDraft = { buyerText: '', buyerId: null, date: '2026-11-19', shipped: false, items: [] }
@@ -36,4 +36,15 @@ test.each([
   [[{ productId: 1, quantity: '1', price: '1' }, { productId: null, quantity: '2', price: '1' }], 'Linha 2: escolha um produto.']
 ])('toSaleInput rejects %j', (items, error) => {
   expect(toSaleInput({ ...base, items }, buyers)).toEqual({ error })
+})
+
+test('withTrailingBlank keeps exactly one blank row at the end, with stable uids', () => {
+  const a = { uid: 1, productId: 1, quantity: '1', price: '1' }
+  const rows = withTrailingBlank([a, { uid: 2, productId: null, quantity: '', price: '' }, { uid: 3, productId: null, quantity: '', price: '' }])
+  expect(rows).toHaveLength(2)
+  expect(rows[0]).toBe(a)
+  expect(isBlank(rows[1])).toBe(true)
+  const fresh = withTrailingBlank([])
+  expect(fresh).toHaveLength(1)
+  expect(withTrailingBlank([a])[1].uid).not.toBe(withTrailingBlank([a])[1].uid)
 })

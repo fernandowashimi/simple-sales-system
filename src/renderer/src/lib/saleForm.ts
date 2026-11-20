@@ -2,11 +2,21 @@ import type { Buyer, SaleInput } from '../../../shared/types'
 import { nameKey } from '../../../shared/names'
 import { parsePriceBR } from '../../../shared/money'
 
-export type ItemDraft = { productId: number | null; quantity: string; price: string }
+/** `uid` is a stable React key so removing a middle row never shifts another row's inputs. */
+export type ItemDraft = { uid?: number; productId: number | null; quantity: string; price: string }
 export type SaleDraft = { id?: number; buyerText: string; buyerId: number | null; date: string; shipped: boolean; items: ItemDraft[] }
 
-export const blankItem = (): ItemDraft => ({ productId: null, quantity: '', price: '' })
+let nextUid = 1
+export const blankItem = (): ItemDraft => ({ uid: nextUid++, productId: null, quantity: '', price: '' })
+export const withUid = (it: Omit<ItemDraft, 'uid'>): ItemDraft => ({ ...it, uid: nextUid++ })
 export const isBlank = (it: ItemDraft): boolean => it.productId == null && !it.quantity.trim() && !it.price.trim()
+
+/** Exactly one blank row at the end to type into: extra trailing blanks dropped, the first one kept. */
+export function withTrailingBlank(items: ItemDraft[]): ItemDraft[] {
+  let end = items.length
+  while (end > 0 && isBlank(items[end - 1])) end--
+  return end < items.length ? items.slice(0, end + 1) : [...items, blankItem()]
+}
 
 /** A selected buyer wins; otherwise an exact key match reuses an existing buyer; any other text is a new buyer. */
 export function resolveBuyer(buyerText: string, buyerId: number | null, buyers: Buyer[]): { buyerId: number | null; newBuyerName: string | null } {

@@ -11,6 +11,13 @@ export function parsePriceBR(input: string): number | null {
   return Number(m[1]) * 100 + Number((m[2] ?? '').padEnd(2, '0'))
 }
 
+const NUM = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+/** Value for a price input (the "R$" is the field's addon): 4550 -> "45,50". */
+export function formatPriceInput(cents: number): string {
+  return NUM.format(cents / 100)
+}
+
 export function formatBRL(cents: number): string {
   return BRL.format(cents / 100)
 }

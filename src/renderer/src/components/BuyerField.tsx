@@ -37,8 +37,9 @@ export function BuyerField({
       selectedKey={buyerId}
       emptyMessage="Nenhum comprador cadastrado ainda"
       onInputChange={(value) => {
-        const selected = buyers.find((b) => b.id === buyerId)
-        onChange(value, selected && selected.name === value ? buyerId : null)
+        // match by key, not by the buyerId prop: React Aria fires this right after a selection, before the new id arrives
+        const match = buyers.find((b) => nameKey(b.name) === nameKey(value))
+        onChange(value, match ? match.id : null)
       }}
       onSelectionChange={(key) => {
         if (key == null || key === NEW_KEY) return
